@@ -7,8 +7,8 @@ One Gateway container serves:
   (allowlist, token from `.env`);
 - **Browser** — the OpenClaw Control UI (dashboard) on the published port.
 
-The agent runs with the Wormsoft (OpenAI-compatible) model provider, works in
-`/workspace`, and commits under the Git identity provided in `.env`.
+The agent runs with the Wormsoft (OpenAI-compatible) model provider and works
+in `/workspace`.
 
 ## 🚀 Quick Start
 
@@ -78,16 +78,6 @@ The agent uses the Wormsoft OpenAI-compatible endpoint
 The full model catalog is registered in the generated config; switch the
 primary model via `OPENCLAW_MODEL` (e.g. `wormsoft/agent/medium`,
 `wormsoft/code/high`, `wormsoft/vision/medium`).
-
-### Git Identity
-
-The agent commits under the identity provided via `GIT_USER_NAME` and
-`GIT_USER_EMAIL` in your `.env` file. On every container start the entrypoint
-applies it to the container's `git` config and generates the agent's global
-instructions file (`/workspace/AGENTS.md`), so all commits made by the agent
-are attributed to your account with no extra setup.
-The commit-identity rules are also documented in `AGENTS.md`, which OpenClaw
-loads automatically for every session in this workspace.
 
 ## 🔐 Permissions and SSH Setup
 

@@ -29,9 +29,6 @@ services:
       - WORMSOFT_API_KEY=${WORMSOFT_API_KEY}
       # Token for GitHub API (needed for Pull Requests)
       - GITHUB_TOKEN=${GITHUB_TOKEN}
-      # Git identity for commits made by the agent
-      - GIT_USER_NAME=${GIT_USER_NAME}
-      - GIT_USER_EMAIL=${GIT_USER_EMAIL}
     healthcheck:
       # /healthz is a container liveness probe that requires no auth
       test: ["CMD", "curl", "-fsS", "http://localhost:18789/healthz"]

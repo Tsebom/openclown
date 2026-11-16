@@ -11,9 +11,7 @@ set -e
 #   1. ~/.openclaw/openclaw.json  - Gateway config: auth token, Telegram
 #      channel (bot token + allowlist of numeric user IDs), Wormsoft model
 #      provider, per-user session isolation.
-#   2. /workspace/AGENTS.md       - global agent instructions (git identity),
-#      loaded by the OpenClaw agent for every session in its workspace.
-#   3. ~/.ssh                     - SSH key bootstrap (bind-mounted host dir).
+#   2. ~/.ssh                     - SSH key bootstrap (bind-mounted host dir).
 #
 # The .env file is the single source of truth: edit .env, restart the
 # container. Runtime changes made in the Control UI are overwritten on the
@@ -157,50 +155,6 @@ EOF
 }; then
     echo "WARN: could not write ${STATE_DIR}/openclaw.json - state volume is not writable by UID 1050."
     echo "Fix on the host: sudo chown -R 1050:1050 <openclaw-state volume path>, then restart."
-fi
-
-# --- Git identity (for commits made by the agent) -----------------------------
-# Values are provided via environment (see .env.example). On every start the
-# identity is applied to the container git config and the global agent
-# instructions file is generated into the agent workspace, so all agent
-# commits are automatically attributed to the connected Git account.
-if [ -n "${GIT_USER_NAME}" ] && [ -n "${GIT_USER_EMAIL}" ]; then
-    git config --global user.name "$GIT_USER_NAME" || true
-    git config --global user.email "$GIT_USER_EMAIL" || true
-
-    if mkdir -p /workspace 2>/dev/null; then
-        cat > /workspace/AGENTS.md <<EOF
-# Global instructions
-
-## Git identity (all projects)
-
-You work as a contributor through your own personal Git account
-(created specifically for you, the agent). It is YOUR account:
-- Name: $GIT_USER_NAME
-- Email: $GIT_USER_EMAIL
-
-Rules:
-
-- Use the personal account for all git operations: commits, tags,
-  pushes, pull requests, and GitHub API calls. Commits and tags are
-  made under the identity from git config (user.name / user.email).
-- Before the first commit of a session, check git config user.name and
-  git config user.email. If a value is empty, matches the agent built-in
-  default identity, or clearly does not belong to the personal account,
-  ask the user for the correct name/email and set it repo-locally with
-  git config user.name "<name>" / git config user.email "<email>".
-- Never use the agent built-in default identity or any other default
-  identity; never commit under foreign accounts.
-
-Do not write account names or emails into repository files (AGENTS.md,
-README, configs) - keep them only in .env, git config, and this global
-file, which is generated at container start and is not part of any
-repository.
-EOF
-    else
-        echo "WARN: cannot write /workspace/AGENTS.md - host volume is not owned by UID 1050."
-        echo "Fix on the host: sudo chown -R 1050:1050 <openclaw-workspace volume path>"
-    fi
 fi
 
 # --- SSH bootstrap ---------------------------------------------------------------
