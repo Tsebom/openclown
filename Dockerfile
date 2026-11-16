@@ -12,8 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     npm install -g openclaw
 
 # Create a non-root user for security with non-standard UID/GID
-# (same UID/GID 1050 as the opencode-web deployment so the same
-# host user works for both containers)
 RUN groupadd -g 1050 agent && useradd -u 1050 -g agent -m -s /bin/bash agent
 
 # Environment variables

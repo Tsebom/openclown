@@ -4,9 +4,8 @@ set -e
 # =============================================================================
 # OpenClaw container entrypoint
 #
-# Like the opencode-web deployment, all secrets and access lists live in
-# .env (see .env.example) and the entrypoint turns them into the live
-# Gateway config on every container start:
+# All secrets and access lists live in .env (see .env.example) and the
+# entrypoint turns them into the live Gateway config on every container start:
 #
 #   1. ~/.openclaw/openclaw.json  - Gateway config: auth token, Telegram
 #      channel (bot token + allowlist of numeric user IDs), Wormsoft model
