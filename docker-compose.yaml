@@ -18,14 +18,14 @@ services:
     environment:
       # Gateway / Control UI auth (paste into the dashboard Settings)
       - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
-      # Optional: primary agent model (default: wormsoft/code/medium)
+      # Optional: primary agent model (provider/model format; see README)
       - OPENCLAW_MODEL=${OPENCLAW_MODEL}
       # Optional: extra Control UI allowed origins, comma-separated URLs
       - OPENCLAW_CONTROL_UI_ORIGINS=${OPENCLAW_CONTROL_UI_ORIGINS}
       # Telegram channel: bot token + allowlist of allowed numeric user IDs
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_ALLOWED_USER_IDS=${TELEGRAM_ALLOWED_USER_IDS}
-      # Model provider
+      # Optional: model provider key (currently Wormsoft; registered when set)
       - WORMSOFT_API_KEY=${WORMSOFT_API_KEY}
     healthcheck:
       # /healthz is a container liveness probe that requires no auth

@@ -8,8 +8,9 @@ generated at container start by `entrypoint.sh` from environment variables
 committed):
 
 - `~/.openclaw/openclaw.json` — Gateway config: auth token, Telegram channel
-  (`TELEGRAM_BOT_TOKEN` + allowlist `TELEGRAM_ALLOWED_USER_IDS`), Wormsoft
-  model provider (`WORMSOFT_API_KEY`), per-user session isolation.
+  (`TELEGRAM_BOT_TOKEN` + allowlist `TELEGRAM_ALLOWED_USER_IDS`), optional
+  model provider (currently Wormsoft, registered when `WORMSOFT_API_KEY` is
+  set), per-user session isolation.
 
 - When modifying `entrypoint.sh`, `.env.example`, or `docker-compose.yaml`,
   do not break this mechanism (the env vars must reach the container, and

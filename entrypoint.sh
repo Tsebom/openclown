@@ -8,7 +8,7 @@ set -e
 # entrypoint turns them into the live Gateway config on every container start:
 #
 #   1. ~/.openclaw/openclaw.json  - Gateway config: auth token, Telegram
-#      channel (bot token + allowlist of numeric user IDs), Wormsoft model
+#      channel (bot token + allowlist of numeric user IDs), optional model
 #      provider, per-user session isolation.
 #   2. ~/.ssh                     - SSH key bootstrap (bind-mounted host dir).
 #
@@ -21,7 +21,7 @@ set -e
 # A broken .env must abort here with a clear message instead of failing
 # later as an opaque Gateway config-validation error.
 missing=""
-for var in TELEGRAM_BOT_TOKEN TELEGRAM_ALLOWED_USER_IDS WORMSOFT_API_KEY; do
+for var in TELEGRAM_BOT_TOKEN TELEGRAM_ALLOWED_USER_IDS; do
     if [ -z "${!var}" ]; then
         missing="$missing $var"
     fi
@@ -90,6 +90,48 @@ if [ -n "${OPENCLAW_CONTROL_UI_ORIGINS}" ]; then
     done
 fi
 
+# --- Model provider ------------------------------------------------------------
+# The model provider is OPTIONAL and pluggable: it is registered in the
+# generated config below, so switching providers in the future only requires
+# registering another one here (models.providers) and setting OPENCLAW_MODEL.
+#
+# Currently the Wormsoft (OpenAI-compatible) endpoint is registered when
+# WORMSOFT_API_KEY is set in .env.
+MODEL_PRIMARY="${OPENCLAW_MODEL:-}"
+MODEL_CLAUSE=""
+MODELS_SECTION=""
+if [ -n "${WORMSOFT_API_KEY}" ]; then
+    [ -n "$MODEL_PRIMARY" ] || MODEL_PRIMARY="wormsoft/code/medium"
+    MODEL_CLAUSE=", \"model\": { \"primary\": \"${MODEL_PRIMARY}\" }"
+    MODELS_SECTION=",
+  \"models\": {
+    \"providers\": {
+      \"wormsoft\": {
+        \"name\": \"Wormsoft\",
+        \"baseUrl\": \"https://ai.wormsoft.ru/api/gpt\",
+        \"apiKey\": \"\${WORMSOFT_API_KEY}\",
+        \"api\": \"openai-completions\",
+        \"models\": [
+          { \"id\": \"mine/onlycode\", \"name\": \"MyCode\" },
+          { \"id\": \"agent/low\", \"name\": \"LowAgent\" },
+          { \"id\": \"agent/medium\", \"name\": \"MediumAgent\" },
+          { \"id\": \"agent/high\", \"name\": \"HighAgent\" },
+          { \"id\": \"code/low\", \"name\": \"LowCode\" },
+          { \"id\": \"code/medium\", \"name\": \"MediumCode\" },
+          { \"id\": \"code/high\", \"name\": \"HighCode\" },
+          { \"id\": \"vision/low\", \"name\": \"LowVision\" },
+          { \"id\": \"vision/medium\", \"name\": \"MediumVision\" },
+          { \"id\": \"codevision/high\", \"name\": \"HighVision\" }
+        ]
+      }
+    }
+  }"
+fi
+if [ -z "$MODEL_PRIMARY" ] && [ -z "${WORMSOFT_API_KEY}" ]; then
+    echo "WARN: no model provider configured - set WORMSOFT_API_KEY in .env (or register"
+    echo "       another provider in entrypoint.sh) and optionally OPENCLAW_MODEL."
+fi
+
 # --- Generate the Gateway config ---------------------------------------------
 # ~/.openclaw/openclaw.json is regenerated on every start from the
 # environment (the .env file is the source of truth).
@@ -109,32 +151,7 @@ if ! { cat > "${STATE_DIR}/openclaw.json" <<EOF
   },
   "agents": {
     "defaults": {
-      "workspace": "/workspace",
-      "model": {
-        "primary": "${OPENCLAW_MODEL:-wormsoft/code/medium}"
-      }
-    }
-  },
-  "models": {
-    "providers": {
-      "wormsoft": {
-        "name": "Wormsoft",
-        "baseUrl": "https://ai.wormsoft.ru/api/gpt",
-        "apiKey": "\${WORMSOFT_API_KEY}",
-        "api": "openai-completions",
-        "models": [
-          { "id": "mine/onlycode", "name": "MyCode" },
-          { "id": "agent/low", "name": "LowAgent" },
-          { "id": "agent/medium", "name": "MediumAgent" },
-          { "id": "agent/high", "name": "HighAgent" },
-          { "id": "code/low", "name": "LowCode" },
-          { "id": "code/medium", "name": "MediumCode" },
-          { "id": "code/high", "name": "HighCode" },
-          { "id": "vision/low", "name": "LowVision" },
-          { "id": "vision/medium", "name": "MediumVision" },
-          { "id": "codevision/high", "name": "HighVision" }
-        ]
-      }
+      "workspace": "/workspace"${MODEL_CLAUSE}
     }
   },
   "channels": {
@@ -149,6 +166,7 @@ if ! { cat > "${STATE_DIR}/openclaw.json" <<EOF
   "session": {
     "dmScope": "per-channel-peer"
   }
+${MODELS_SECTION}
 }
 EOF
 }; then
