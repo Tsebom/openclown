@@ -107,7 +107,6 @@ if [ -n "${WORMSOFT_API_KEY}" ]; then
   \"models\": {
     \"providers\": {
       \"wormsoft\": {
-        \"name\": \"Wormsoft\",
         \"baseUrl\": \"https://ai.wormsoft.ru/api/gpt\",
         \"apiKey\": \"\${WORMSOFT_API_KEY}\",
         \"api\": \"openai-completions\",
