@@ -27,8 +27,6 @@ services:
       - TELEGRAM_ALLOWED_USER_IDS=${TELEGRAM_ALLOWED_USER_IDS}
       # Model provider
       - WORMSOFT_API_KEY=${WORMSOFT_API_KEY}
-      # Token for GitHub API (needed for Pull Requests)
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
     healthcheck:
       # /healthz is a container liveness probe that requires no auth
       test: ["CMD", "curl", "-fsS", "http://localhost:18789/healthz"]
