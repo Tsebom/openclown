@@ -1,0 +1,46 @@
+services:
+  openclaw:
+    build: .
+    container_name: openclaw-standalone
+    ports:
+      - "${OPENCLAW_PORT:-18789}:18789"
+    volumes:
+      - ./.openclaw/ssh:/home/agent/.ssh:rw
+      # Persist the OpenClaw Gateway state (openclaw.json config, sessions,
+      # SQLite databases, credentials) across container recreations
+      - openclaw-state:/home/agent/.openclaw
+      # Persist the agent working directory (cloned repos, agent work)
+      # across container recreations. /workspace is created in the image
+      # with agent:agent ownership, so the volume is initialized with
+      # correct permissions (Docker creates missing volume mount points
+      # as root)
+      - openclaw-workspace:/workspace
+    environment:
+      # Gateway / Control UI auth (paste into the dashboard Settings)
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      # Optional: primary agent model (default: wormsoft/code/medium)
+      - OPENCLAW_MODEL=${OPENCLAW_MODEL}
+      # Optional: extra Control UI allowed origins, comma-separated URLs
+      - OPENCLAW_CONTROL_UI_ORIGINS=${OPENCLAW_CONTROL_UI_ORIGINS}
+      # Telegram channel: bot token + allowlist of allowed numeric user IDs
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ALLOWED_USER_IDS=${TELEGRAM_ALLOWED_USER_IDS}
+      # Model provider
+      - WORMSOFT_API_KEY=${WORMSOFT_API_KEY}
+      # Token for GitHub API (needed for Pull Requests)
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      # Git identity for commits made by the agent
+      - GIT_USER_NAME=${GIT_USER_NAME}
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL}
+    healthcheck:
+      # /healthz is a container liveness probe that requires no auth
+      test: ["CMD", "curl", "-fsS", "http://localhost:18789/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  openclaw-state:
+  openclaw-workspace:
