@@ -47,9 +47,15 @@ docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
 
 ### Подключение каналов (необязательно)
 
+Одноразовые CLI-команды выполняются с `--entrypoint node` и явным путём
+к CLI (обход entrypoint'а-обёртки; `docker compose run ... channels add`
+без этого не находит бинарник `channels`):
+
 ```bash
-docker compose run --rm openclaw-gateway channels add --channel telegram --token "<token>"
-docker compose run --rm openclaw-gateway channels login   # WhatsApp по QR
+docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
+  dist/index.js channels add --channel telegram --token "<token>"
+docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
+  dist/index.js channels login   # WhatsApp по QR
 ```
 
 ### Проверка
@@ -65,16 +71,29 @@ docker compose logs -f openclaw-gateway
 1. В `.env` задайте `OPENCLAW_BIND=0.0.0.0` (порт 18789 защитите файрвоалом,
    цепочка `DOCKER-USER`).
 2. Сетевые (не loopback) браузеры требуют **разового** подтверждения
-   устройства: страница панели покажет команду `openclaw devices approve
-   <requestId>` — выполните её на хосте:
+   устройства: страница панели покажет request ID — одобрение выполняется
+   на хосте, **внутри работающего контейнера**:
 
 ```bash
-docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
-  dist/index.js devices approve <requestId>
+docker compose exec openclaw-gateway \
+  openclaw devices approve <requestId>
 ```
 
+   Важно: не используйте здесь `docker compose run ... devices approve` —
+   это поднимает *отдельный* контейнер, и пока Gateway запущен, CLI из него
+   не может изменить состояние (ошибка «cannot verify Gateway ownership ...
+   Run this command inside the Gateway container»). `exec` запускает команду
+   в том же контейнере, где работает Gateway, и одобрение проходит через
+   него. Если запрос истёк (у pending-запросов есть TTL) — просто обновите
+   страницу панели и возьмите новый ID.
+
 После одобрения браузер запоминается и повторных подтверждений не будет
-(сброс: `devices revoke --device <id> --role <role>`).
+(сброс: `docker compose exec openclaw-gateway openclaw devices revoke
+--device <id> --role <role>`).
+
+Если браузер находится **на самой машине Gateway**, проще не одобрять ничего:
+открывайте `http://127.0.0.1:18789/`, а не сетевой адрес — loopback-соединения
+авто-апрувят pairing, и экран «Approve this browser» не показывается.
 
 ### Примечания
 
