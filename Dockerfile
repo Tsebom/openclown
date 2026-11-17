@@ -37,15 +37,20 @@ ENV HOME=/home/agent \
 # чтобы `docker compose up -d` работало без ручного `config set`.
 # Существующий openclaw.json никогда не перезаписывается.
 #
-# Дальше скрипт передаёт управление ОФИЦИАЛЬНОМУ entrypoint'у образа
-# (node /app/docker-entrypoint.mjs под tini), который сам запускает Gateway
-# (CMD ["node","openclaw.mjs","gateway"]). ВАЖНО: запускать bare
-# `node dist/index.js` без подкоманды нельзя — это интерактивный TUI,
-# в контейнере он только спамит "needs an interactive TTY".
+# Дальше скрипт передаёт управление штатному entrypoint'у образа.
+# КРИТИЧНО: /app/docker-entrypoint.mjs ждёт ПОЛНУЮ команду в аргументах
+# (в официальном образе её даёт CMD ["node","openclaw.mjs","gateway"]);
+# запущенный без аргументов, он завершается с кодом 127.
+# tini используется, только если найден в образе (в старых публичных
+# образах его может не быть — безусловный exec /usr/bin/tini тоже даёт 127).
+# Фолбэки: /app/openclaw.mjs, затем /app/dist/index.js — всегда с подкомандой
+# gateway (bare `node ... index.js` без подкоманды — интерактивный TUI,
+# в контейнере он спамит "needs an interactive TTY").
 RUN printf '%s\n' \
       '#!/bin/sh' \
       'set -e' \
       'CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-/home/agent/.openclaw}"' \
+      'mkdir -p "$CONFIG_DIR"' \
       'if [ ! -f "$CONFIG_DIR/openclaw.json" ]; then' \
       '  cat > "$CONFIG_DIR/openclaw.json" <<EOF' \
       '{' \
@@ -57,9 +62,28 @@ RUN printf '%s\n' \
       'EOF' \
       '  chmod 600 "$CONFIG_DIR/openclaw.json"' \
       'fi' \
-      'exec /usr/bin/tini -s -- node /app/docker-entrypoint.mjs "$@"' \
+      'TINI="$(command -v tini || true)"' \
+      'run() {' \
+      '  if [ -n "$TINI" ]; then' \
+      '    exec "$TINI" -s -- "$@"' \
+      '  fi' \
+      '  exec "$@"' \
+      '}' \
+      'if [ -f /app/docker-entrypoint.mjs ]; then' \
+      '  if [ "$#" -eq 0 ]; then' \
+      '    set -- node /app/openclaw.mjs gateway' \
+      '  fi' \
+      '  run node /app/docker-entrypoint.mjs "$@"' \
+      'fi' \
+      'if [ "$#" -eq 0 ]; then' \
+      '  set -- gateway' \
+      'fi' \
+      'if [ -f /app/openclaw.mjs ]; then' \
+      '  run node /app/openclaw.mjs "$@"' \
+      'fi' \
+      'run node /app/dist/index.js "$@"' \
       > /usr/local/bin/openclaw-entrypoint.sh \
- && chmod 755 /usr/local/bin/openclaw-entrypoint.sh
+  && chmod 755 /usr/local/bin/openclaw-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/openclaw-entrypoint.sh"]
 
