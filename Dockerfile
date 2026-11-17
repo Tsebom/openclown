@@ -33,13 +33,12 @@ ENV HOME=/home/agent \
     OPENCLAW_AUTH_PROFILE_SECRET_DIR=/home/agent/.config/openclaw
 
 # Стартовый конфиг Gateway (минимум для первого старта: mode=local, bind=lan)
-# — хранится в репозитории (openclaw.json) и попадает в образ; остальные
-# настройки Gateway дособавляет само приложение при запуске.
-COPY openclaw.json /usr/local/share/openclaw/openclaw-default.json
+# — хранится в репозитории как data/openclaw.json и уже лежит в смонтированном
+# томе; остальные настройки Gateway дособавляет само приложение при запуске.
 
-# Вступительный скрипт: при первом запуске (если openclaw.json ещё нет)
-# ставит стартовый конфиг Gateway, чтобы `docker compose up -d`
-# работало без ручного `config set`.
+# Вступительный скрипт: подстраховывает права на стартовый конфиг
+# (в git файл 644, в рантайме желательны 600) и передаёт управление
+# штатному entrypoint'у образа.
 # Существующий openclaw.json никогда не перезаписывается.
 #
 # Дальше скрипт передаёт управление штатному entrypoint'у образа.
@@ -56,8 +55,7 @@ RUN printf '%s\n' \
       'set -e' \
       'CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-/home/agent/.openclaw}"' \
       'mkdir -p "$CONFIG_DIR"' \
-      'if [ ! -f "$CONFIG_DIR/openclaw.json" ]; then' \
-      '  cp /usr/local/share/openclaw/openclaw-default.json "$CONFIG_DIR/openclaw.json"' \
+      'if [ -f "$CONFIG_DIR/openclaw.json" ]; then' \
       '  chmod 600 "$CONFIG_DIR/openclaw.json"' \
       'fi' \
       'TINI="$(command -v tini || true)"' \
