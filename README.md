@@ -8,6 +8,10 @@
 Образ собирается из `Dockerfile`: официальный OpenClaw-образ + пользователь
 `agent` (**UID/GID 1050**), каталоги состояния под `/home/agent`
 (контейнер работает от `agent`, а не от стандартного `node`/1000).
+Стартовый конфиг Gateway — `data/openclaw.json` в репозитории
+(минимум для первого старта: `mode=local`, `bind=lan`); он отслеживается
+в git, Gateway сам дособавляет в него остальные настройки при запуске
+(такие изменения видны в `git status`).
 Базовый образ задаётся в `.env` через `OPENCLAW_IMAGE`
 (по умолчанию `ghcr.io/openclaw/openclaw:latest`).
 
@@ -27,9 +31,9 @@ cp .env.example .env
 mkdir -p data auth-secret
 # Linux: sudo chown -R 1050:1050 data auth-secret
 
-# 3. Запуск. При первом старте образ сам создаёт минимальную конфигурацию
-# Gateway (gateway.mode=local, gateway.bind=lan) и стартует; compose сам
-# соберёт образ из Dockerfile.
+# 3. Запуск. Стартовый конфиг Gateway (data/openclaw.json из репозитория:
+# gateway.mode=local, gateway.bind=lan) уже в смонтированном томе;
+# compose сам соберёт образ из Dockerfile.
 docker compose up -d
 ```
 
@@ -96,6 +100,16 @@ docker compose exec openclaw-gateway \
 авто-апрувят pairing, и экран «Approve this browser» не показывается.
 
 ### Примечания
+
+- **Модели (провайдер Wormsoft):** стартовый конфиг `data/openclaw.json`
+  уже подключает провайдера `wormsoft` со всеми системными алиасами
+  (MyCode, Low/Medium/High Agent, Low/Medium/High Code, Low/Medium Vision,
+  HighVision) и моделью по умолчанию `wormsoft/wormsoft/code/high`
+  (документация: https://ai.wormsoft.ru/docs/connect/openclaw,
+  https://ai.wormsoft.ru/docs/llm/system-aliases).
+  Ключ не хранится в конфиге — берётся из переменной окружения
+  `WORMSOFT_API_KEY` (задаётся в `.env`, не опционально: без ключа
+  агент не сможет отвечать).
 
 - **Локальные модели на хосте** (Ollama/LM Studio) из контейнера доступны как
   `http://host.docker.internal:11434` / `http://host.docker.internal:1234`.

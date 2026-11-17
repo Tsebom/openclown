@@ -1,0 +1,35 @@
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "lan"
+  },
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "wormsoft": {
+        "baseUrl": "https://ai.wormsoft.ru/api/gpt",
+        "apiKey": "${WORMSOFT_API_KEY}",
+        "api": "openai-completions",
+        "models": [
+          { "id": "wormsoft/mine/onlycode", "name": "MyCode" },
+          { "id": "wormsoft/agent/low", "name": "LowAgent" },
+          { "id": "wormsoft/agent/medium", "name": "MediumAgent" },
+          { "id": "wormsoft/agent/high", "name": "HighAgent" },
+          { "id": "wormsoft/code/low", "name": "LowCode" },
+          { "id": "wormsoft/code/medium", "name": "MediumCode" },
+          { "id": "wormsoft/code/high", "name": "HighCode" },
+          { "id": "wormsoft/vision/low", "name": "LowVision" },
+          { "id": "wormsoft/vision/medium", "name": "MediumVision" },
+          { "id": "wormsoft/codevision/high", "name": "HighVision" }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "wormsoft/wormsoft/code/high"
+      }
+    }
+  }
+}

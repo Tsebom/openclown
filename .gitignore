@@ -2,8 +2,10 @@
 .env
 
 # Состояние OpenClaw: runtime-данные не коммитим, каталоги держим через .gitkeep
-# (в data/ — конфиг, сессии, media, auth-profiles; в auth-secret/ — ключ шифрования OAuth)
+# (в data/ — конфиг, сессии, media, auth-profiles; в auth-secret/ — ключ шифрования OAuth).
+# Исключение — data/openclaw.json: стартовый конфиг Gateway, отслеживаемый в git.
 data/*
 !data/.gitkeep
+!data/openclaw.json
 auth-secret/*
 !auth-secret/.gitkeep
