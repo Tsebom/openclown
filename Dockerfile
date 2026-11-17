@@ -36,6 +36,12 @@ ENV HOME=/home/agent \
 # создаёт минимальную рабочую конфигурацию Gateway (mode=local, bind=lan),
 # чтобы `docker compose up -d` работало без ручного `config set`.
 # Существующий openclaw.json никогда не перезаписывается.
+#
+# Дальше скрипт передаёт управление ОФИЦИАЛЬНОМУ entrypoint'у образа
+# (node /app/docker-entrypoint.mjs под tini), который сам запускает Gateway
+# (CMD ["node","openclaw.mjs","gateway"]). ВАЖНО: запускать bare
+# `node dist/index.js` без подкоманды нельзя — это интерактивный TUI,
+# в контейнере он только спамит "needs an interactive TTY".
 RUN printf '%s\n' \
       '#!/bin/sh' \
       'set -e' \
@@ -51,13 +57,7 @@ RUN printf '%s\n' \
       'EOF' \
       '  chmod 600 "$CONFIG_DIR/openclaw.json"' \
       'fi' \
-      'if [ "$#" -eq 0 ]; then' \
-      '  set -- node /app/dist/index.js' \
-      'fi' \
-      'if [ -x /usr/bin/tini ]; then' \
-      '  exec /usr/bin/tini -- "$@"' \
-      'fi' \
-      'exec "$@"' \
+      'exec /usr/bin/tini -s -- node /app/docker-entrypoint.mjs "$@"' \
       > /usr/local/bin/openclaw-entrypoint.sh \
  && chmod 755 /usr/local/bin/openclaw-entrypoint.sh
 
