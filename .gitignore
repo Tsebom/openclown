@@ -1,0 +1,9 @@
+# Секреты и локальное окружение (.env содержит токен Gateway и ключи провайдеров)
+.env
+
+# Состояние OpenClaw: runtime-данные не коммитим, каталоги держим через .gitkeep
+# (в data/ — конфиг, сессии, media, auth-profiles; в auth-secret/ — ключ шифрования OAuth)
+data/*
+!data/.gitkeep
+auth-secret/*
+!auth-secret/.gitkeep

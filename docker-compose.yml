@@ -1,0 +1,49 @@
+# OpenClaw Gateway в контейнере — доступ из браузера: http://<host>:18789/
+# Документация: https://docs.openclaw.ai/ru/install/docker
+#
+# Быстрый старт:
+#   cp .env.example .env   # задать OPENCLAW_GATEWAY_TOKEN и ключ(и) провайдера
+#   mkdir -p data auth-secret
+#   # Linux: sudo chown -R 1050:1050 data auth-secret  (юзер agent, UID 1050)
+#   # первый запуск — настройка Gateway (см. README):
+#   docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
+#     dist/index.js config set --batch-json \
+#     '[{"path":"gateway.mode","value":"local"},{"path":"gateway.bind","value":"lan"},{"path":"gateway.controlUi.allowedOrigins","value":["http://localhost:18789","http://127.0.0.1:18789"]}]'
+#   docker compose up -d
+
+name: openclaw
+
+services:
+  openclaw-gateway:
+    # Образ собирается из Dockerfile (см. выше) на базе официального
+    # OpenClaw: юзер agent (UID 1050), state под /home/agent.
+    build:
+      context: .
+      args:
+        # Базовый официальный образ (GHCR — основной, Docker Hub — зеркало;
+        # теги latest, main, <version>, -browser). Задаётся в .env: OPENCLAW_IMAGE
+        OPENCLAW_BASE: ${OPENCLAW_IMAGE:-ghcr.io/openclaw/openclaw:latest}
+    image: openclaw:agent-1050
+    container_name: openclaw-gateway
+    restart: unless-stopped
+    env_file:
+      # Секреты и ключи провайдеров передаются из .env (создаётся из .env.example)
+      - .env
+    environment:
+      TZ: ${TZ:-Europe/Moscow}
+    ports:
+      # Gateway + веб-панель управления.
+      # OPENCLAW_BIND=127.0.0.1 — доступ только с самой машины (по умолчанию,
+      # безопаснее); 0.0.0.0 — с других машин сети (защитите порт файрвоалом!).
+      - "${OPENCLAW_BIND:-127.0.0.1}:${OPENCLAW_PORT:-18789}:18789"
+    volumes:
+      # Состояние: openclaw.json, сеансы агентов, media, плагины.
+      # Каталог переживает замену контейнера. Контейнер работает от agent
+      # (UID 1050) — на Linux каталог на хосте должен быть с правами 1050:1050.
+      - ./data:/home/agent/.openclaw
+      # Секретный ключ профилей аутентификации OAuth — держать отдельно от data.
+      - ./auth-secret:/home/agent/.config/openclaw
+    # Доступ к локальным провайдерам на хосте (Ollama/LM Studio):
+    # http://host.docker.internal:11434 / http://host.docker.internal:1234
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
