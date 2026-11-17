@@ -15,6 +15,10 @@
 ARG OPENCLAW_BASE=ghcr.io/openclaw/openclaw:latest
 FROM ${OPENCLAW_BASE}
 
+# Официальный образ работает от non-root `node` (uid 1000), поэтому
+# для создания пользователя нужен временный переход на root.
+USER root
+
 # Пользователь agent: UID 1050 / GID 1050 + каталоги состояния
 RUN groupadd --gid 1050 agent \
  && useradd --uid 1050 --gid 1050 --create-home --shell /usr/sbin/nologin agent \
