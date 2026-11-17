@@ -101,6 +101,14 @@ docker compose exec openclaw-gateway \
 
 ### Примечания
 
+- **Модели (провайдер Wormsoft):** стартовый конфиг `data/openclaw.json`
+  уже подключает провайдера `wormsoft` (Code High, DeepSeek, Mimo 2.6)
+  с моделью по умолчанию `wormsoft/wormsoft/code/high`
+  (документация: https://ai.wormsoft.ru/docs/connect/openclaw).
+  Ключ не хранится в конфиге — берётся из переменной окружения
+  `WORMSOFT_API_KEY` (задаётся в `.env`, не опционально: без ключа
+  агент не сможет отвечать).
+
 - **Локальные модели на хосте** (Ollama/LM Studio) из контейнера доступны как
   `http://host.docker.internal:11434` / `http://host.docker.internal:1234`.
 - **Обновление:** `docker compose build && docker compose up -d`
