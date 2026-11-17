@@ -32,5 +32,36 @@ ENV HOME=/home/agent \
     OPENCLAW_WORKSPACE_DIR=/home/agent/.openclaw/workspace \
     OPENCLAW_AUTH_PROFILE_SECRET_DIR=/home/agent/.config/openclaw
 
+# Вступительный скрипт: при первом запуске (если openclaw.json ещё нет)
+# создаёт минимальную рабочую конфигурацию Gateway (mode=local, bind=lan),
+# чтобы `docker compose up -d` работало без ручного `config set`.
+# Существующий openclaw.json никогда не перезаписывается.
+RUN printf '%s\n' \
+      '#!/bin/sh' \
+      'set -e' \
+      'CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-/home/agent/.openclaw}"' \
+      'if [ ! -f "$CONFIG_DIR/openclaw.json" ]; then' \
+      '  cat > "$CONFIG_DIR/openclaw.json" <<EOF' \
+      '{' \
+      '  gateway: {' \
+      '    mode: "local",' \
+      '    bind: "lan",' \
+      '  },' \
+      '}' \
+      'EOF' \
+      '  chmod 600 "$CONFIG_DIR/openclaw.json"' \
+      'fi' \
+      'if [ "$#" -eq 0 ]; then' \
+      '  set -- node /app/dist/index.js' \
+      'fi' \
+      'if [ -x /usr/bin/tini ]; then' \
+      '  exec /usr/bin/tini -- "$@"' \
+      'fi' \
+      'exec "$@"' \
+      > /usr/local/bin/openclaw-entrypoint.sh \
+ && chmod 755 /usr/local/bin/openclaw-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/openclaw-entrypoint.sh"]
+
 # Gateway запускается от agent (UID 1050), а не от node (UID 1000)
 USER agent

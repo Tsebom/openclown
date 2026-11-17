@@ -3,13 +3,9 @@
 #
 # Быстрый старт:
 #   cp .env.example .env   # задать OPENCLAW_GATEWAY_TOKEN и ключ(и) провайдера
-#   mkdir -p data auth-secret
 #   # Linux: sudo chown -R 1050:1050 data auth-secret  (юзер agent, UID 1050)
-#   # первый запуск — настройка Gateway (см. README):
-#   docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
-#     dist/index.js config set --batch-json \
-#     '[{"path":"gateway.mode","value":"local"},{"path":"gateway.bind","value":"lan"},{"path":"gateway.controlUi.allowedOrigins","value":["http://localhost:18789","http://127.0.0.1:18789"]}]'
-#   docker compose up -d
+#   docker compose up -d   # при первом старте образ сам создаст config Gateway
+#   открыть http://127.0.0.1:18789/ и вставить токен (см. README)
 
 name: openclaw
 
