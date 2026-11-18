@@ -11,7 +11,6 @@
         "apiKey": "${WORMSOFT_API_KEY}",
         "api": "openai-completions",
         "models": [
-          { "id": "wormsoft/mine/onlycode", "name": "MyCode" },
           { "id": "wormsoft/agent/low", "name": "LowAgent" },
           { "id": "wormsoft/agent/medium", "name": "MediumAgent" },
           { "id": "wormsoft/agent/high", "name": "HighAgent" },
@@ -20,7 +19,7 @@
           { "id": "wormsoft/code/high", "name": "HighCode" },
           { "id": "wormsoft/vision/low", "name": "LowVision" },
           { "id": "wormsoft/vision/medium", "name": "MediumVision" },
-          { "id": "wormsoft/codevision/high", "name": "HighVision" }
+          { "id": "wormsoft/vision/high", "name": "HighVision" }
         ]
       }
     }
@@ -28,7 +27,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "wormsoft/wormsoft/code/high"
+        "primary": "wormsoft/wormsoft/code/medium"
       }
     }
   }
