@@ -11,6 +11,7 @@
         "apiKey": "${WORMSOFT_API_KEY}",
         "api": "openai-completions",
         "models": [
+          { "id": "wormsoft/mine/onlycode", "name": "MyCode" },
           { "id": "wormsoft/agent/low", "name": "LowAgent" },
           { "id": "wormsoft/agent/medium", "name": "MediumAgent" },
           { "id": "wormsoft/agent/high", "name": "HighAgent" },

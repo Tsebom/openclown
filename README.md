@@ -103,9 +103,10 @@ docker compose exec openclaw-gateway \
 
 - **Модели (провайдер Wormsoft):** стартовый конфиг `data/openclaw.json`
   уже подключает провайдера `wormsoft` со всеми системными алиасами
-  (Low/Medium/High Agent, Low/Medium/High Code, Low/Medium/High Vision)
-  и моделью по умолчанию `wormsoft/wormsoft/code/medium` (работает на любом
-  тарифе; High-модели требуют тариф simple и выше — документация:
+  (MyCode — кастомный алиас, Low/Medium/High Agent, Low/Medium/High Code,
+  Low/Medium/High Vision) и моделью по умолчанию
+  `wormsoft/wormsoft/code/medium` (работает на любом тарифе; High-модели
+  требуют тариф simple и выше — документация:
   https://ai.wormsoft.ru/docs/connect/openclaw,
   https://ai.wormsoft.ru/docs/llm/system-aliases).
   Ключ не хранится в конфиге — берётся из переменной окружения
