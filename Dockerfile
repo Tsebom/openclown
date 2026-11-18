@@ -36,50 +36,10 @@ ENV HOME=/home/agent \
 # — хранится в репозитории как data/openclaw.json и уже лежит в смонтированном
 # томе; остальные настройки Gateway дособавляет само приложение при запуске.
 
-# Вступительный скрипт: подстраховывает права на стартовый конфиг
-# (в git файл 644, в рантайме желательны 600) и передаёт управление
-# штатному entrypoint'у образа.
-# Существующий openclaw.json никогда не перезаписывается.
-#
-# Дальше скрипт передаёт управление штатному entrypoint'у образа.
-# КРИТИЧНО: /app/docker-entrypoint.mjs ждёт ПОЛНУЮ команду в аргументах
-# (в официальном образе её даёт CMD ["node","openclaw.mjs","gateway"]);
-# запущенный без аргументов, он завершается с кодом 127.
-# tini используется, только если найден в образе (в старых публичных
-# образах его может не быть — безусловный exec /usr/bin/tini тоже даёт 127).
-# Фолбэки: /app/openclaw.mjs, затем /app/dist/index.js — всегда с подкомандой
-# gateway (bare `node ... index.js` без подкоманды — интерактивный TUI,
-# в контейнере он спамит "needs an interactive TTY").
-RUN printf '%s\n' \
-      '#!/bin/sh' \
-      'set -e' \
-      'CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-/home/agent/.openclaw}"' \
-      'mkdir -p "$CONFIG_DIR"' \
-      'if [ -f "$CONFIG_DIR/openclaw.json" ]; then' \
-      '  chmod 600 "$CONFIG_DIR/openclaw.json"' \
-      'fi' \
-      'TINI="$(command -v tini || true)"' \
-      'run() {' \
-      '  if [ -n "$TINI" ]; then' \
-      '    exec "$TINI" -s -- "$@"' \
-      '  fi' \
-      '  exec "$@"' \
-      '}' \
-      'if [ -f /app/docker-entrypoint.mjs ]; then' \
-      '  if [ "$#" -eq 0 ]; then' \
-      '    set -- node /app/openclaw.mjs gateway' \
-      '  fi' \
-      '  run node /app/docker-entrypoint.mjs "$@"' \
-      'fi' \
-      'if [ "$#" -eq 0 ]; then' \
-      '  set -- gateway' \
-      'fi' \
-      'if [ -f /app/openclaw.mjs ]; then' \
-      '  run node /app/openclaw.mjs "$@"' \
-      'fi' \
-      'run node /app/dist/index.js "$@"' \
-      > /usr/local/bin/openclaw-entrypoint.sh \
-  && chmod 755 /usr/local/bin/openclaw-entrypoint.sh
+# Entrypoint-скрипт: права на стартовый конфиг + запуск Gateway с фолбэками
+# и tini (подробности — в комментариях самого entrypoint.sh).
+COPY entrypoint.sh /usr/local/bin/openclaw-entrypoint.sh
+RUN chmod 755 /usr/local/bin/openclaw-entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/openclaw-entrypoint.sh"]
 
