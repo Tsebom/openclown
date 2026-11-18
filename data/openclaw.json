@@ -20,7 +20,7 @@
           { "id": "wormsoft/code/high", "name": "HighCode" },
           { "id": "wormsoft/vision/low", "name": "LowVision" },
           { "id": "wormsoft/vision/medium", "name": "MediumVision" },
-          { "id": "wormsoft/codevision/high", "name": "HighVision" }
+          { "id": "wormsoft/vision/high", "name": "HighVision" }
         ]
       }
     }
@@ -28,7 +28,7 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "wormsoft/wormsoft/code/high"
+        "primary": "wormsoft/wormsoft/code/medium"
       }
     }
   }
