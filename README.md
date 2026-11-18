@@ -62,6 +62,35 @@ docker compose run --rm --no-deps --entrypoint node openclaw-gateway \
   dist/index.js channels login   # WhatsApp по QR
 ```
 
+### Telegram-бот
+
+Канал уже включён в стартовом конфиге `data/openclaw.json` — токен и белый
+список берутся из `.env` (в конфиг подставляются через `${VAR}`, секреты
+в git не попадают). Для Telegram CLI-команда `channels add` не нужна.
+
+```bash
+# 1. Создайте бота у @BotFather (/newbot) и впишите в .env:
+#      TELEGRAM_BOT_TOKEN=<токен вида 123456789:AA...>
+# 2. Впишите в .env свой числовой user id Telegram:
+#      TELEGRAM_ALLOW_FROM=<id>
+# 3. Перезапустите:
+docker compose up -d
+```
+
+Как узнать свой user id: напишите боту любое сообщение и посмотрите
+`from.id` в `docker compose logs -f`, либо откройте
+`https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getUpdates` (поле `chat.id`).
+
+Доступ: `dmPolicy: "allowlist"` — личные сообщения только с id из
+`allowFrom`, все остальные молча блокируются. Группы по умолчанию отключены
+(fail-closed). В `.env.example` уже 4 слота (`TELEGRAM_ALLOW_FROM`,
+`_2`, `_3`, `_4`) — заполните нужные числовыми id, лишние можно
+оставить с плейсхолдерами (нечисловые записи игнорируются) либо удалить
+переменную **и** её запись `"${...}"` в `channels.telegram.allowFrom`
+(`data/openclaw.json`) парой. Внимание: запись в конфиге без соответствующей
+переменной (или пустая переменная) — это ошибка загрузки конфига,
+Gateway не стартует.
+
 ### Проверка
 
 ```bash

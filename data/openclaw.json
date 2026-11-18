@@ -31,5 +31,18 @@
         "primary": "wormsoft/wormsoft/code/medium"
       }
     }
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
+      "allowFrom": [
+        "${TELEGRAM_ALLOW_FROM}",
+        "${TELEGRAM_ALLOW_FROM_2}",
+        "${TELEGRAM_ALLOW_FROM_3}",
+        "${TELEGRAM_ALLOW_FROM_4}"
+      ]
+    }
   }
 }
